@@ -144,12 +144,10 @@ herr_t H5RBDB_link_iterate(H5RBDB_group_t* group_obj, hid_t file_id, hid_t group
     // do not commit transaction when closing group!
     group_obj->readonly = 1;
     //printf("Iterating through children of %s\n", group_obj->name);
-
     if(!recursive) {
         // Dim
         //printf("** @H5RBDB_iterate: not recursive: calling callback for %s\n", group_obj->name);
         //txn = (DB_TXN*) H5RBDB_get_txn(fapl_id);
-
         link_info.type = H5L_TYPE_HARD;
 	if (idx_type == H5_INDEX_NAME) {
 		// use comp_len = 3 to speed-up the comparison, no other key starts with '__c'!
@@ -161,10 +159,7 @@ herr_t H5RBDB_link_iterate(H5RBDB_group_t* group_obj, hid_t file_id, hid_t group
 		H5RBDB_database_cursor_link_iter_apply(group_obj->file_obj->dbenv_info, group_id, &group_obj->dbp, &txn, "__o", 3, op, &link_info, group_obj->file_obj->name, op_data);
 	}
 	link_info.type = H5L_TYPE_SOFT;
-	//START_COUNTING
 	H5RBDB_database_cursor_link_iter_apply(group_obj->file_obj->dbenv_info, group_id, &group_obj->dbp, &txn, "__l", 3, op, &link_info, group_obj->file_obj->name, op_data);
-	//STOP_COUNTING("cursor for links")
-        //printf("Done with H5RBDB_iterate\n");
         /*if(H5Lget_info(1, "test", &linfo, H5P_DEFAULT) < 0) {
             fprintf(stderr, "unable to get link info from \"%s\"\n", "test");
         }*/

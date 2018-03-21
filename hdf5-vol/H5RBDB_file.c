@@ -171,23 +171,12 @@ H5RBDB_file_t * H5RBDB_file_create(const char* name, unsigned flags, hid_t fcpl_
     //try(tid->commit(tid, 0));
     //try(dbenv->txn_begin(dbenv, NULL, &tid, DB_TXN_SNAPSHOT));
     
-    // put the property lists in database
-    //try(H5RBDB_put_hid_t(dbp, tid, "fcpl_id", fcpl_id));
-    //try(H5RBDB_put_hid_t(dbp, tid, "fapl_id", fapl_id));
-    //try(H5RBDB_put_hid_t(dbp, tid, "dxpl_id", dxpl_id));
     
     gname_fixed = H5RBDB_groupname_add_prefix("/", name);
     //printf("Creating root group db...\n");
     // create a database for root group inside the new file
     //printf("######### Creating DB for root group!\n");
     H5RBDB_database_open(&dbenv, &g_dbp, &tid, db_file, gname_fixed, DB_TYPE_GROUP, 1, 0);
-    //try(tid->commit(tid, 0));
-    //try(dbenv->txn_begin(dbenv, NULL, &tid, DB_TXN_SNAPSHOT));
-    
-    //try(tid->commit(tid, 0));
-    //try(dbenv->txn_begin(dbenv, NULL, &tid, DB_TXN_SNAPSHOT));
-
-
     // create the db handle database, a HASH database for storing the handles of the opened DBs
     memset(db_handles_dbname, 0, 256);
     sprintf(db_handles_dbname, "db_handles_%s_%s", db_file, name);
@@ -321,7 +310,6 @@ int H5RBDB_file_close(H5RBDB_file_t* file, hid_t dxpl_id){
 	// close the db handles DB
 	//printf("######### Closing DB for db handles with name %s!\n", file->db_handles_dbname);
     try(file->db_handles_dbp->close(file->db_handles_dbp, 0));
-	//printf("OK!\n");
     //printf("Removing Hashtable database %s from file %s\n", file->db_handles_dbname, file->dbenv_info->db_file);
 	//START_COUNTING_FILE
 	// Probably we need to use transactions in order to remove the db handles table.

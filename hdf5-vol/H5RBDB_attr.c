@@ -109,36 +109,6 @@ H5RBDB_attr_t* H5RBDB_attr_create(void* obj, H5I_type_t obj_type, const char* at
     dspace_nums.nelem = attr->dataspace.nelem;
     dspace_nums.rank = attr->dataspace.rank;
     STOP_COUNTING_ATTR("init attr data structures")
-    //printf("nelem %u, rank %u\n", dspace_nums.nelem, dspace_nums.rank);
-    /*
-    START_COUNTING_ATTR
-    H5RBDB_put_dataspace_nums(&dbp, &tid, attr->dataspace_key, (void*)&dspace_nums);
-    STOP_COUNTING_ATTR("put dspace nums")
-    START_COUNTING_ATTR
-    H5RBDB_put_dataspace_multiple(&dbp, &tid, DSPACE_SIZE, attr->dataspace_key, (void*)attr->dataspace.size, attr->dataspace.rank);
-    STOP_COUNTING_ATTR("put dspace size")
-    START_COUNTING_ATTR
-    H5RBDB_put_dataspace_multiple(&dbp, &tid, DSPACE_MAX, attr->dataspace_key, (void*)attr->dataspace.max, attr->dataspace.rank);
-    STOP_COUNTING_ATTR("put dspace max")
-    // store the datatype!
-    sprintf(key_str, "%s_%s", DB_KEYS_ATTR_DTYPE, attr->absolute_name);
-    //printf("Saving datatype, size: %u\n", sizeof(H5T_t));
-    START_COUNTING_ATTR
-    H5RBDB_database_put(&dbp, &tid, key_str, type, sizeof(H5T_t));
-    STOP_COUNTING_ATTR("put dtype")
-    memset(key_str, 0, 128);
-    sprintf(key_str, "%s_%s", DB_KEYS_ATTR_DTYPE_SHARED, attr->absolute_name);
-    //printf("Saving shared datatype, size: %u\n", sizeof(H5T_shared_t));
-    START_COUNTING_ATTR
-    H5RBDB_database_put(&dbp, &tid, key_str, type->shared, sizeof(H5T_shared_t));
-    STOP_COUNTING_ATTR("put dtype shared")
-    // store the storage size!
-    memset(key_str, 0, 128);
-    sprintf(key_str, "%s_%s", DB_KEYS_ATTR_STORAGE_SIZE, attr->absolute_name);
-    START_COUNTING_ATTR
-    H5RBDB_database_put(&dbp, &tid, key_str, &attr->data_size, sizeof(hsize_t));
-    STOP_COUNTING_ATTR("put storage size")
-    */
     //printf("attr db absolute name: %s\n", attr->absolute_name);
     //H5RBDB_put_attr_metadata_multiple(&dbp, &tid, attr->absolute_name, &attr->dataspace, type, type->shared, attr->data_size);
     START_COUNTING_ATTR
@@ -177,27 +147,6 @@ herr_t H5RBDB_put_attr_metadata(DB** dbp, DB_TXN** tid, H5RBDB_attr_t* attr, H5T
     H5RBDB_database_put(dbp, tid, attr_mdata_key, attr_metadata, sizeof(H5RBDB_attr_metadata_t));
     H5RBDB_put_dataspace_multiple(dbp, tid, DSPACE_SIZE, attr_mdata_key, attr->dataspace.size, attr->dataspace.rank);
     H5RBDB_put_dataspace_multiple(dbp, tid, DSPACE_MAX, attr_mdata_key, attr->dataspace.max, attr->dataspace.rank);
-    // put the union's fields as well!
-    /*memset(attr_mdata_key, 0, ATTR_NAME_SIZE+36);
-    sprintf(attr_mdata_key, "mdata_attr_union_atomic_%s", attr->absolute_name);
-    H5RBDB_database_put(dbp, tid, attr_mdata_key, &attr->type->shared->u.atomic, sizeof(H5T_atomic_t));
-    memset(attr_mdata_key, 0, ATTR_NAME_SIZE+36);
-    sprintf(attr_mdata_key, "mdata_attr_union_compnd_%s", attr->absolute_name);
-    H5RBDB_database_put(dbp, tid, attr_mdata_key, &attr->type->shared->u.compnd, sizeof(H5T_compnd_t));
-    memset(attr_mdata_key, 0, ATTR_NAME_SIZE+36);
-    sprintf(attr_mdata_key, "mdata_attr_union_enumer_%s", attr->absolute_name);
-    H5RBDB_database_put(dbp, tid, attr_mdata_key, &attr->type->shared->u.enumer, sizeof(H5T_enum_t));
-    memset(attr_mdata_key, 0, ATTR_NAME_SIZE+36);
-    sprintf(attr_mdata_key, "mdata_attr_union_vlen_%s", attr->absolute_name);
-    H5RBDB_database_put(dbp, tid, attr_mdata_key, &attr->type->shared->u.vlen, sizeof(H5T_vlen_t));
-    memset(attr_mdata_key, 0, ATTR_NAME_SIZE+36);
-    sprintf(attr_mdata_key, "mdata_attr_union_opaque_%s", attr->absolute_name);
-    H5RBDB_database_put(dbp, tid, attr_mdata_key, &attr->type->shared->u.opaque, sizeof(H5T_opaque_t));
-    memset(attr_mdata_key, 0, ATTR_NAME_SIZE+36);
-    sprintf(attr_mdata_key, "mdata_attr_union_array_%s", attr->absolute_name);
-    H5RBDB_database_put(dbp, tid, attr_mdata_key, &attr->type->shared->u.array, sizeof(H5T_array_t));
-    */
-
     if ( attr->type->shared->u.enumer.value != NULL){ // in some cases this is NULL.
         for (i=0; i < attr->type->shared->u.enumer.nmembs; i++){ // store info about enum members
             memset(attr_mdata_key, 0, ATTR_NAME_SIZE+36);
@@ -247,32 +196,8 @@ herr_t H5RBDB_get_attr_metadata(DB** dbp, DB_TXN** tid, H5RBDB_attr_t* attr) {
     attr->dataspace.max = H5RBDB_get_dataspace_multiple(dbp, tid, DSPACE_MAX, 
         attr_mdata_key, attr->dataspace.rank);
     attr->malloced_dtype = 1;
-    // get the union's fields as well!
-    /*memset(attr_mdata_key, 0, ATTR_NAME_SIZE+36);
-    sprintf(attr_mdata_key, "mdata_attr_union_atomic_%s", attr->absolute_name);
-    H5RBDB_database_get(dbp, tid, attr_mdata_key, &attr->type->shared->u.atomic, sizeof(H5T_atomic_t));
-    memset(attr_mdata_key, 0, ATTR_NAME_SIZE+36);
-    sprintf(attr_mdata_key, "mdata_attr_union_compnd_%s", attr->absolute_name);
-    H5RBDB_database_get(dbp, tid, attr_mdata_key, &attr->type->shared->u.compnd, sizeof(H5T_compnd_t));
-    memset(attr_mdata_key, 0, ATTR_NAME_SIZE+36);
-    sprintf(attr_mdata_key, "mdata_attr_union_enumer_%s", attr->absolute_name);
-    H5RBDB_database_get(dbp, tid, attr_mdata_key, &attr->type->shared->u.enumer, sizeof(H5T_enum_t));
-    memset(attr_mdata_key, 0, ATTR_NAME_SIZE+36);
-    sprintf(attr_mdata_key, "mdata_attr_union_vlen_%s", attr->absolute_name);
-    H5RBDB_database_get(dbp, tid, attr_mdata_key, &attr->type->shared->u.vlen, sizeof(H5T_vlen_t));
-    memset(attr_mdata_key, 0, ATTR_NAME_SIZE+36);
-    sprintf(attr_mdata_key, "mdata_attr_union_opaque_%s", attr->absolute_name);
-    H5RBDB_database_get(dbp, tid, attr_mdata_key, &attr->type->shared->u.opaque, sizeof(H5T_opaque_t));
-    memset(attr_mdata_key, 0, ATTR_NAME_SIZE+36);
-    sprintf(attr_mdata_key, "mdata_attr_union_array_%s", attr->absolute_name);
-    H5RBDB_database_get(dbp, tid, attr_mdata_key, &attr->type->shared->u.array, sizeof(H5T_array_t));
-    */
     uint8_t nmembs = attr->type->shared->u.enumer.nmembs;
     //printf("Got enumer.nmembs: %d\n", nmembs);
-
-    /*memset(attr_mdata_key, 0, ATTR_NAME_SIZE+36);
-    sprintf(attr_mdata_key, "mdata_attr_union_enumer_value_%s", attr->absolute_name);
-    H5RBDB_database_get(dbp, tid, attr_mdata_key, attr->type->shared->u.enumer.value, sizeof(uint8_t));*/
 
     // maybe store parent in BDB as well... Not needed for now!
     attr->type->shared->parent = NULL;
@@ -297,16 +222,6 @@ herr_t H5RBDB_get_attr_metadata(DB** dbp, DB_TXN** tid, H5RBDB_attr_t* attr) {
             H5RBDB_database_get(dbp, tid, attr_mdata_key, attr->type->shared->u.enumer.name[i], len * sizeof(char) );
         } 
     }
-    /*printf("==========> Nice, now enumer is all set:\n");
-    for (i=0; i < nmembs; i++){ 
-        printf("Value [%d] = %u\n", i, attr->type->shared->u.enumer.value[i]);
-        printf("Name [%d] = %s\n", i, attr->type->shared->u.enumer.name[i]);
-    }*/
-    /*attr->type->shared->u.compnd = attr_metadata->u.compnd;
-    attr->type->shared->u.enumer = attr_metadata->u.enumer;
-    attr->type->shared->u.vlen = attr_metadata->u.vlen;
-    attr->type->shared->u.opaque = attr_metadata->u.opaque;
-    attr->type->shared->u.array = attr_metadata->u.array;*/
     free(attr_metadata);
     return 0;
 }
@@ -365,23 +280,10 @@ herr_t H5RBDB_put_attr_metadata_multiple(DB** dbp, DB_TXN** tid, const char* att
     DB_MULTIPLE_WRITE_NEXT(p, &val, dtype_shared, sizeof(H5T_shared_t));
     DB_MULTIPLE_WRITE_NEXT(p, &val, &storage_size, sizeof(hsize_t));
     STOP_COUNTING_ATTR("initializing bulk buffer")
-    //printf("Writing multiple data items, Buffer size: %ld\n", sizeof(hsize_t)+ sizeof(unsigned) + 
-    //   sizeof(dspace->rank * sizeof(hsize_t)) +  sizeof(dspace->rank * sizeof(hsize_t)) + 
-    //   sizeof(H5T_t) + sizeof(H5T_shared_t) + sizeof(hsize_t));
     //perform the single DB put operation to write the entire bulk buffer
     START_COUNTING_ATTR
     try((*dbp)->put(*dbp, *tid, &key, &val, DB_MULTIPLE));
     STOP_COUNTING_ATTR("DB_MULTIPLE put")
-    /*START_COUNTING_ATTR
-    try(H5RBDB_database_put(dbp, tid, attr_absolute_name, test_buf, 452));
-    STOP_COUNTING_ATTR("single put of a 452 byte buffer")
-    START_COUNTING_ATTR
-    H5RBDB_put_dataspace_multiple(dbp, tid, DSPACE_SIZE, attr_absolute_name, dspace->size, dspace->rank);
-    STOP_COUNTING_ATTR("put dspace size")
-    START_COUNTING_ATTR
-    H5RBDB_put_dataspace_multiple(dbp, tid, DSPACE_MAX, attr_absolute_name, dspace->max, dspace->rank);
-    STOP_COUNTING_ATTR("put dspace max")
-    */
     free(key.data);
     free(val.data);
     return 0;
@@ -420,32 +322,6 @@ H5RBDB_attr_t* H5RBDB_attr_open(void* obj, H5I_type_t obj_type, const char* attr
             goto done;
     }
     attr = H5RBDB_attr_initialize(obj, obj_type, attr_name);
-    //H5RBDB_dataspace_t dspace;
-    //attr->dataspace = dspace;
-
-    /*
-    H5RBDB_dataspace_nums_t dspace_nums;
-    H5RBDB_get_dataspace_nums(&dbp, &tid, attr->dataspace_key, (void*)&dspace_nums);
-    attr->dataspace.nelem = dspace_nums.nelem;
-    attr->dataspace.rank = dspace_nums.rank;
-    attr->dataspace.size = H5RBDB_get_dataspace_multiple(&dbp, &tid, DSPACE_SIZE, attr->dataspace_key, attr->dataspace.rank);
-    attr->dataspace.max = H5RBDB_get_dataspace_multiple(&dbp, &tid, DSPACE_MAX, attr->dataspace_key, attr->dataspace.rank);
-    
-    H5T_shared_t* shared = (H5T_shared_t*) malloc(sizeof(H5T_shared_t));
-    H5T_t* type = (H5T_t*) malloc(sizeof(H5T_t));
-    
-    sprintf(key_str, "%s_%s", DB_KEYS_ATTR_DTYPE, attr->absolute_name);
-    ret = H5RBDB_database_get(&dbp, &tid, key_str, type, sizeof(H5T_t));
-    memset(key_str, 0, 128);
-    sprintf(key_str, "%s_%s", DB_KEYS_ATTR_DTYPE_SHARED, attr->absolute_name);
-    ret = H5RBDB_database_get(&dbp, &tid, key_str, shared, sizeof(H5T_shared_t));
-    memset(key_str, 0, 128);
-    sprintf(key_str, "%s_%s", DB_KEYS_ATTR_STORAGE_SIZE, attr->absolute_name);
-    H5RBDB_database_get(&dbp, &tid, key_str, &attr->data_size, sizeof(hsize_t));
-    
-    attr->type = type;
-    attr->type->shared = shared;
-    */
     try(H5RBDB_get_attr_metadata(&dbp, &tid, attr));
     done:
         return attr;
@@ -819,8 +695,5 @@ static void H5RBDB_attr_set(H5RBDB_attr_t* attr, H5S_t* space, H5T_t* type){
     attr->type->shared->u.opaque = type->shared->u.opaque;
     attr->type->shared->u.array = type->shared->u.array;
     attr->type->shared->u.enumer.value = type->shared->u.enumer.value;
-    //attr->type->shared->u = type->shared->u;
-    //attr->type->shared->u.enumer.value = type->shared->u.enumer.value;
-    //attr->type->shared->u.opaque = type->shared->u.opaque;
     attr->malloced_dtype = 0;
 }

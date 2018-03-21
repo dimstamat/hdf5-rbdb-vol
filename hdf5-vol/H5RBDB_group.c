@@ -121,14 +121,6 @@ H5RBDB_group_t * H5RBDB_group_create(H5RBDB_file_t* file_obj, H5VL_loc_params_t 
 
     new_group_obj->readonly = pexists;
 
-    // new_group_obj->dbenv = malloc(sizeof(DB_ENV));
-    // *new_group_obj->dbenv = *f_dbenv;
-    // new_group_obj->dbp = malloc(sizeof(DB));
-    // *(new_group_obj->dbp) = *g_dbp;
-    // We don't need to copy the values of the dbenv and db handles,
-    // the memory is allocated and will remain there! Only the address
-    // will be lost after the end of the function, so we only have to 
-    // store the address!
     new_group_obj->file_obj = file_obj;
     new_group_obj->file_obj->dbenv_info->dbenv = f_dbenv;
     new_group_obj->dbp = g_dbp;
@@ -218,14 +210,6 @@ H5RBDB_group_t * H5RBDB_group_open(void *obj, H5I_type_t type, const char *group
 	    free(group_absolute_name);
     }
     
-    // We don't need to copy the values of the dbenv and db handles,
-    // the memory is allocated and will remain there! Only the address
-    // will be lost after the end of the function, so we only have to 
-    // store the address!
-    // opened_group_obj->dbp = malloc(sizeof(DB));
-    // *opened_group_obj->dbp = *g_dbp;
-    // opened_group_obj->dbenv = malloc(sizeof(DB_ENV));
-    // *opened_group_obj->dbenv = *f_dbenv;
     opened_group_obj->file_obj = file_obj;
     opened_group_obj->file_obj->dbenv_info->dbenv = f_dbenv;
     opened_group_obj->dbp = g_dbp;
